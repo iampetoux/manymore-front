@@ -2,7 +2,6 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useRouter } from 'next/router';
-import { AxiosError } from 'axios';
 import { login } from '@/api/auth';
 import { useMutation } from '@tanstack/react-query';
 import { enqueueSnackbar } from 'notistack';
@@ -32,12 +31,18 @@ const useLogin = () => {
     resolver: yupResolver(schema)
   });
 
-  const { mutate } = useMutation({
+  const { mutate, isLoading } = useMutation({
     mutationKey: ['login'],
     mutationFn: login,
     onSuccess: () => {
-
-    }
+      enqueueSnackbar("Vous êtes maintenant connecté.", { variant: 'success' })
+      router.push('/');
+    },
+    onError: (error) => {
+      if (error instanceof AxiosError) {
+        enqueueSnackbar(error?.response?.data.message, { variant: 'error'});
+      }
+    },
   });
 
   return { register, handleSubmit, mutate, errors, isLoading };
